@@ -46,4 +46,4 @@ def resolve_parent(path_arg):
 
     if not path.is_absolute():
         path = HOME_DIR / path
-    return path.resolve
+    return path.resolve()
