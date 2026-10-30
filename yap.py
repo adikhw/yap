@@ -1,5 +1,6 @@
 import re
 import argparse
+import sys
 
 from pathlib import Path
 from dataclasses import dataclass
@@ -33,3 +34,16 @@ def parse_args(argv):
 
     return parser.parse_args(argv)
 
+def validate_name(name):
+    if NAME_PATTERN.fullmatch(name) is None:
+        print(f"Name is not valid: '{name}' (use letters, numbers, _ or -)", file=sys.stderr)
+        sys.exit(EXIT_USAGE)
+
+def resolve_parent(path_arg):
+    if not path_arg:
+        return HOME_DIR
+    path = Path(path_arg).expanduser()
+
+    if not path.is_absolute():
+        path = HOME_DIR / path
+    return path.resolve
