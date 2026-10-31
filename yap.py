@@ -118,3 +118,8 @@ def python_files(config: ProjectConfig) -> dict[str, str]:
     return {p: t.replace(NAME_MARKER, config.name) for p, t in files.items()}
 
 
+def write_files(target: Path, files: dict[str, str]) -> None:
+    for rel_path, content in files.items():
+        path = target / rel_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
