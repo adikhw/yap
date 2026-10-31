@@ -7,11 +7,47 @@ from dataclasses import dataclass
 
 HOME_DIR        = Path.home()
 VENV_NAME       = ".venv"
+
 NAME_PATTERN    = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
 NAME_MARKER     = "__NAME__"
+
 EXIT_OK         = 0
 EXIT_FAIL       = 1
 EXIT_USAGE      = 2
+
+MAIN_TEMPLATE = """def main():
+    print("Hello from __NAME__!")
+
+
+if __name__ == "__main__":
+    main()
+"""
+
+README_TEMPLATE = """# __NAME__
+
+This README was Made with yap (yet another project)
+"""
+
+GITIGNORE_LINES = [
+    "__pycache__/",
+    "*.pyc",
+    ".venv/",
+    "venv/",
+    ".env",
+    "dist/",
+    "build/",
+    "*.egg-info/",
+    ".pytest_cache/",
+]
+
+GITIGNORE_TEMPLATE = "\n".join(GITIGNORE_LINES) + "\n"
+
+PYPROJECT_TEMPLATE = """[project]
+name = "__NAME__"
+version = "0.1.0"
+requires-python = ">=3.10"
+"""
+
 
 @dataclass
 class ProjectConfig:
