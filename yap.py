@@ -20,6 +20,7 @@ class ProjectConfig:
     parent: Path
     packages: list[str]
 
+
 def parse_args(argv):
     parser = argparse.ArgumentParser(prog="yap")
     sub = parser.add_subparsers(dest="kind", required=True)
@@ -34,10 +35,12 @@ def parse_args(argv):
 
     return parser.parse_args(argv)
 
+
 def validate_name(name):
     if NAME_PATTERN.fullmatch(name) is None:
         print(f"Name is not valid: '{name}' (use letters, numbers, _ or -)", file=sys.stderr)
         sys.exit(EXIT_USAGE)
+
 
 def resolve_parent(path_arg):
     if not path_arg:
@@ -46,4 +49,24 @@ def resolve_parent(path_arg):
 
     if not path.is_absolute():
         path = HOME_DIR / path
-    return path.resolve
+    return path.resolve()
+
+
+def target_dir(config: ProjectConfig) -> Path:
+    return config.parent / config.name
+
+
+def ensure_target(config: ProjectConfig) -> Path:
+    target = target_dir(config)
+
+    if target.exists() or target.is_symlink():
+        print(f"Folder already exists: {target}", file=sys.stderr)
+        sys.exit(EXIT_FAIL)
+
+    try:
+        target.mkdir(parents=True, exist_ok=False)
+    except OSError as e:
+        print(f"Cannot create: {target}: {e}", file=sys.stderr)
+        sys.exit(EXIT_FAIL)
+
+    return target
