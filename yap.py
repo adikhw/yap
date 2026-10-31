@@ -106,3 +106,15 @@ def ensure_target(config: ProjectConfig) -> Path:
         sys.exit(EXIT_FAIL)
 
     return target
+
+
+def python_files(config: ProjectConfig) -> dict[str, str]:
+    files = {
+        "main.py": MAIN_TEMPLATE,
+        "README.md": README_TEMPLATE,
+        ".gitignore": GITIGNORE_TEMPLATE,
+        "pyproject.toml": PYPROJECT_TEMPLATE,
+    }
+    return {p: t.replace(NAME_MARKER, config.name) for p, t in files.items()}
+
+
