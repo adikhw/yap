@@ -85,6 +85,7 @@ def resolve_parent(path_arg):
 
     if not path.is_absolute():
         path = HOME_DIR / path
+
     return path.resolve()
 
 
@@ -123,3 +124,5 @@ def write_files(target: Path, files: dict[str, str]) -> None:
         path = target / rel_path
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
+
+
