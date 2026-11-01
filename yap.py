@@ -155,3 +155,31 @@ def create_venv(target: Path) -> None:
     if code != EXIT_OK:
         print(f"Failed to create venv: {error}", file=sys.stderr)
         sys.exit(EXIT_FAIL)
+
+
+def venv_python(target: Path) -> Path:
+    return target / VENV_NAME / "bin" / "python"
+
+
+def install_packages(target: Path, packages: list[str]) -> None:
+    # Calling the venv interpreter directly installs into that venv;
+    # no "activate" step is needed.
+    print(f"Installing: {' '.join(packages)}...")
+
+    code, _, error = run_command(
+        [str(venv_python(target)), "-m", "pip", "install", *packages],
+        target,
+    )
+    if code != EXIT_OK:
+        print(f"pip install failed:\n{error}", file=sys.stderr)
+        sys.exit(EXIT_FAIL)
+
+    code, output, error = run_command(
+        [str(venv_python(target)), "-m", "pip", "freeze"],
+        target,
+    )
+    if code != EXIT_OK:
+        print(f"pip freeze failed: {error}", file=sys.stderr)
+        sys.exit(EXIT_FAIL)
+
+    (target / "requirements.txt").write_text(output, encoding="utf-8")
