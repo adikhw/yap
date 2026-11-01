@@ -99,7 +99,7 @@ my_web/
 ├── css/
 │   └── style.css
 ├── js/
-│   └── main.js
+│   └── script.js
 ├── assets/
 │   ├── favicon.svg
 │   └── images/
