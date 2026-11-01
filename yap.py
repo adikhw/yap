@@ -1,6 +1,8 @@
 import re
 import argparse
 import sys
+import shutil
+import subprocess
 
 from pathlib import Path
 from dataclasses import dataclass
@@ -126,3 +128,30 @@ def write_files(target: Path, files: dict[str, str]) -> None:
         path.write_text(content, encoding="utf-8")
 
 
+def run_command(args: list[str], cwd: Path) -> tuple[int, str, str]:
+    result = subprocess.run(
+        args,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode, result.stdout, result.stderr
+
+
+def init_git(target: Path) -> None:
+    if shutil.which("git") is None:
+        print("Warning: git not found, skipping git init", file=sys.stderr)
+        return
+
+    code, _, error = run_command(["git", "init"], target)
+    if code != EXIT_OK:
+        print(f"git init failed: {error}", file=sys.stderr)
+        sys.exit(EXIT_FAIL)
+
+
+def create_venv(target: Path) -> None:
+    # Use the interpreter running yap, never a guessed "python" from PATH.
+    code, _, error = run_command([sys.executable, "-m", "venv", VENV_NAME], target)
+    if code != EXIT_OK:
+        print(f"Failed to create venv: {error}", file=sys.stderr)
+        sys.exit(EXIT_FAIL)
