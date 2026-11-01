@@ -1,5 +1,6 @@
 import re
 import argparse
+import shlex
 import sys
 import shutil
 import subprocess
@@ -183,3 +184,56 @@ def install_packages(target: Path, packages: list[str]) -> None:
         sys.exit(EXIT_FAIL)
 
     (target / "requirements.txt").write_text(output, encoding="utf-8")
+
+
+def show_next_steps(config: ProjectConfig, target: Path) -> None:
+    # Quote the absolute path so copy-paste still works when it contains spaces.
+    quoted = shlex.quote(str(target))
+
+    print()
+    print("and yet another project... To continue type:")
+    if config.kind == "python":
+        print(f"cd {quoted} && source .venv/bin/activate")
+    else:
+        print(f"cd {quoted} && python -m http.server")
+        print("Then open http://localhost:8000 in your browser")
+    print("Happy Coding!")
+
+
+def main() -> None:
+    try:
+        args = parse_args(sys.argv[1:])
+        validate_name(args.name)
+        config = ProjectConfig(
+            kind=args.kind,
+            name=args.name,
+            parent=resolve_parent(args.path),
+            packages=getattr(args, "add", []),
+        )
+
+        target = ensure_target(config)
+        print(f"Creating {config.kind} project '{config.name}' in {target}...")
+
+        if config.kind == "python":
+            files = python_files(config)
+        else:
+            print("Web projects are not available yet", file=sys.stderr)
+            sys.exit(EXIT_FAIL)
+
+        write_files(target, files)
+        init_git(target)
+
+        if config.kind == "python":
+            create_venv(target)
+            if config.packages:
+                install_packages(target, config.packages)
+
+        show_next_steps(config, target)
+        sys.exit(EXIT_OK)
+    except KeyboardInterrupt:
+        print("Cancelled.", file=sys.stderr)
+        sys.exit(EXIT_FAIL)
+
+
+if __name__ == "__main__":
+    main()
