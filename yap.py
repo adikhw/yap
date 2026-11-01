@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 
-import re
 import argparse
+import re
 import shlex
-import sys
 import shutil
 import subprocess
-
-from pathlib import Path
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 HOME_DIR        = Path.home()
 VENV_NAME       = ".venv"
+REQUIREMENTS    = "requirements.txt"
+
+KIND_PYTHON     = "python"
+KIND_WEB        = "web"
 
 NAME_PATTERN    = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]*")
 NAME_MARKER     = "__NAME__"
@@ -109,12 +112,12 @@ class ProjectConfig:
     packages: list[str]
 
 
-def parse_args(argv):
+def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="yap")
     sub = parser.add_subparsers(dest="kind", required=True)
 
-    p_py = sub.add_parser("python")
-    p_web = sub.add_parser("web")
+    p_py = sub.add_parser(KIND_PYTHON)
+    p_web = sub.add_parser(KIND_WEB)
 
     for p in (p_py, p_web):
         p.add_argument("name")
@@ -124,13 +127,14 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
-def validate_name(name):
+def validate_name(name: str) -> None:
     if NAME_PATTERN.fullmatch(name) is None:
-        print(f"Name is not valid: '{name}' (use letters, numbers, _ or -)", file=sys.stderr)
+        message = f"Name is not valid: '{name}' (use letters, numbers, _ or -)"
+        print(message, file=sys.stderr)
         sys.exit(EXIT_USAGE)
 
 
-def resolve_parent(path_arg):
+def resolve_parent(path_arg: str | None) -> Path:
     if not path_arg:
         return HOME_DIR
     path = Path(path_arg).expanduser()
@@ -197,6 +201,7 @@ def run_command(args: list[str], cwd: Path) -> tuple[int, str, str]:
         cwd=cwd,
         capture_output=True,
         text=True,
+        check=False,  # the caller inspects the exit code
     )
     return result.returncode, result.stdout, result.stderr
 
@@ -245,7 +250,7 @@ def install_packages(target: Path, packages: list[str]) -> None:
         print(f"pip freeze failed: {error}", file=sys.stderr)
         sys.exit(EXIT_FAIL)
 
-    (target / "requirements.txt").write_text(output, encoding="utf-8")
+    (target / REQUIREMENTS).write_text(output, encoding="utf-8")
 
 
 def show_next_steps(config: ProjectConfig, target: Path) -> None:
@@ -254,8 +259,8 @@ def show_next_steps(config: ProjectConfig, target: Path) -> None:
 
     print()
     print("and yet another project... To continue type:")
-    if config.kind == "python":
-        print(f"cd {quoted} && source .venv/bin/activate")
+    if config.kind == KIND_PYTHON:
+        print(f"cd {quoted} && source {VENV_NAME}/bin/activate")
     else:
         print(f"cd {quoted} && python -m http.server")
         print("Then open http://localhost:8000 in your browser")
@@ -276,7 +281,7 @@ def main() -> None:
         target = ensure_target(config)
         print(f"Creating {config.kind} project '{config.name}' in {target}...")
 
-        if config.kind == "python":
+        if config.kind == KIND_PYTHON:
             files = python_files(config)
         else:
             files = web_files(config)
@@ -284,7 +289,7 @@ def main() -> None:
         write_files(target, files)
         init_git(target)
 
-        if config.kind == "python":
+        if config.kind == KIND_PYTHON:
             create_venv(target)
             if config.packages:
                 install_packages(target, config.packages)
