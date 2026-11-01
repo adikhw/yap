@@ -64,7 +64,7 @@ INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
     <title>__NAME__</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/main.js" defer></script>
+    <script src="js/script.js" defer></script>
 </head>
 <body>
     <h1>__NAME__</h1>
@@ -179,7 +179,7 @@ def web_files(config: ProjectConfig) -> dict[str, str]:
     files = {
         "index.html": INDEX_HTML_TEMPLATE,
         "css/style.css": STYLE_CSS_TEMPLATE,
-        "js/main.js": MAIN_JS_TEMPLATE,
+        "js/script.js": MAIN_JS_TEMPLATE,
         "assets/favicon.svg": FAVICON_SVG_TEMPLATE,
         "assets/images/.gitkeep": "",
         "README.md": WEB_README_TEMPLATE,
