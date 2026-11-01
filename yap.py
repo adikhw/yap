@@ -51,6 +51,53 @@ version = "0.1.0"
 requires-python = ">=3.10"
 """
 
+INDEX_HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>__NAME__</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+    <h1>__NAME__</h1>
+    <p>This page was made with yap</p>
+</body>
+</html>
+"""
+
+STYLE_CSS_TEMPLATE = """*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 2rem;
+    font-family: system-ui, sans-serif;
+    color: #1f2933;
+}
+"""
+
+MAIN_JS_TEMPLATE = """console.log("__NAME__ is ready");
+"""
+
+FAVICON_SVG_TEMPLATE = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+    <circle cx="16" cy="16" r="14" fill="#3b82f6" />
+</svg>
+"""
+
+WEB_README_TEMPLATE = README_TEMPLATE
+
+WEB_GITIGNORE_TEMPLATE = """.DS_Store
+node_modules/
+.env
+*.log
+"""
+
 
 @dataclass
 class ProjectConfig:
@@ -118,6 +165,19 @@ def python_files(config: ProjectConfig) -> dict[str, str]:
         "README.md": README_TEMPLATE,
         ".gitignore": GITIGNORE_TEMPLATE,
         "pyproject.toml": PYPROJECT_TEMPLATE,
+    }
+    return {p: t.replace(NAME_MARKER, config.name) for p, t in files.items()}
+
+
+def web_files(config: ProjectConfig) -> dict[str, str]:
+    files = {
+        "index.html": INDEX_HTML_TEMPLATE,
+        "css/style.css": STYLE_CSS_TEMPLATE,
+        "js/main.js": MAIN_JS_TEMPLATE,
+        "assets/favicon.svg": FAVICON_SVG_TEMPLATE,
+        "assets/images/.gitkeep": "",
+        "README.md": WEB_README_TEMPLATE,
+        ".gitignore": WEB_GITIGNORE_TEMPLATE,
     }
     return {p: t.replace(NAME_MARKER, config.name) for p, t in files.items()}
 
@@ -217,8 +277,7 @@ def main() -> None:
         if config.kind == "python":
             files = python_files(config)
         else:
-            print("Web projects are not available yet", file=sys.stderr)
-            sys.exit(EXIT_FAIL)
+            files = web_files(config)
 
         write_files(target, files)
         init_git(target)
